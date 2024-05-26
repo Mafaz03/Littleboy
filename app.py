@@ -45,7 +45,7 @@ def submit():
             print(f"Email sent ({time}/{times})")
         
         os.remove(file_path)  # Clean up the created file after sending emails
-        return f"Email sent successfully! {times} times. File size: {file_size} MB"
+        return f"Email sent successfully! {times} times. total file size: {file_size*times} MB"
     except Exception as e:
         return f"Error: {str(e)}"
 
