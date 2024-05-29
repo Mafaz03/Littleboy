@@ -22,6 +22,7 @@ def send_emails(sender_email, sender_password, receiver_email, subject, body, ti
             # Create a thread for each email sending task
             thread = threading.Thread(target=send_email, args=(sender_email, sender_password, receiver_email, current_subject, current_body, attachment))
             threads.append(thread)
+            print(f"Starting {time}/{times}")
             thread.start()
 
         # Wait for all threads to complete
