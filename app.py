@@ -1,38 +1,18 @@
-from flask import Flask, render_template, request
 import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
-from helper import *
-
-app = Flask(__name__)
+import threading
+from helper import create_file_with_size, send_email  
+import gradio as gr
 
 # sender_mail = "4tpurpose101@gmail.com"
 # sende_password = "ajfd nsvb lztl ceev"
 
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/submit', methods=['POST'])
-def submit():
-    sender_email = request.form['sender_email']
-    sender_password = request.form['sender_password']
-    receiver_email = request.form['receiver_email']
-    subject = request.form['subject']
-    body = request.form['body']
-    times = int(request.form['times'])
-    file_size = int(request.form['file_size'])  # Convert to integer
-
-    # Create file with specified size
-    file_path = create_file_with_size(file_size)
-    with open(file_path, 'rb') as f:
-        attachment = f.read()
-
-    # Send Email
+def send_emails(sender_email, sender_password, receiver_email, subject, body, times, file_size, attachment, file_path):
     try:
+        threads = []
         for time in range(1, times + 1):
             if times > 1:
                 current_subject = f"{subject} ({time}/{times})"
@@ -40,14 +20,36 @@ def submit():
             else:
                 current_subject = subject
                 current_body = body
-            
-            send_email(sender_email, sender_password, receiver_email, current_subject, current_body, attachment)
-            print(f"Email sent ({time}/{times})")
-        
-        os.remove(file_path)  # Clean up the created file after sending emails
-        return f"Email sent successfully! {times} times. total file size: {file_size*times} MB"
-    except Exception as e:
-        return f"Error: {str(e)}"
 
-if __name__ == '__main__':
-    app.run(debug=True)
+            # Create a thread for each email sending task
+            thread = threading.Thread(target=send_email, args=(sender_email, sender_password, receiver_email, current_subject, current_body, attachment))
+            threads.append(thread)
+            thread.start()
+
+        # Wait for all threads to complete
+        for thread in threads:
+            thread.join()
+
+        os.remove(file_path)  # Clean up the created file after sending emails
+        print(f"All emails sent successfully! {times} times. Total file size: {file_size*times} MB")
+    except Exception as e:
+        print(f"Error: {str(e)}")
+
+
+def sendit(sender_email, sender_password, receiver_email, subject, body, times, file_size):
+    file_path = create_file_with_size(int(file_size))
+    with open(file_path, 'rb') as f:
+        attachment = f.read()
+    
+    thread = threading.Thread(target=send_emails, args=(sender_email, sender_password, receiver_email, subject, body, int(times),file_size, attachment, file_path))
+    thread.start()
+
+    return "Email sending in progress. You will be notified once completed."
+
+demo = gr.Interface(
+    fn=sendit,
+    inputs=["text", "text", "text", "text", "text", "text", "slider"],
+    outputs=["text"]
+)
+
+demo.launch(share=True)
