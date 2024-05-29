@@ -7,8 +7,6 @@ import threading
 from helper import create_file_with_size, send_email  
 import gradio as gr
 
-# sender_mail = "4tpurpose101@gmail.com"
-# sende_password = "ajfd nsvb lztl ceev"
 
 def send_emails(sender_email, sender_password, receiver_email, subject, body, times, file_size, attachment, file_path):
     try:
@@ -36,12 +34,12 @@ def send_emails(sender_email, sender_password, receiver_email, subject, body, ti
         print(f"Error: {str(e)}")
 
 
-def sendit(sender_email, sender_password, receiver_email, subject, body, times, file_size):
-    file_path = create_file_with_size(int(file_size))
+def sendit(sender_email, sender_password, receiver_email, subject, body, times, file_size_50_max):
+    file_path = create_file_with_size(int(file_size_50_max))
     with open(file_path, 'rb') as f:
         attachment = f.read()
     
-    thread = threading.Thread(target=send_emails, args=(sender_email, sender_password, receiver_email, subject, body, int(times),file_size, attachment, file_path))
+    thread = threading.Thread(target=send_emails, args=(sender_email, sender_password, receiver_email, subject, body, int(times),file_size_50_max, attachment, file_path))
     thread.start()
 
     return "Email sending in progress. You will be notified once completed."
