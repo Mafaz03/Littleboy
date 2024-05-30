@@ -6,6 +6,7 @@ from email.mime.application import MIMEApplication
 import threading
 from helper import create_file_with_size, send_email  
 import gradio as gr
+import hashlib
 
 
 def send_emails(sender_email, sender_password, receiver_email, subject, body, times, file_size, attachment, file_path):
@@ -36,14 +37,21 @@ def send_emails(sender_email, sender_password, receiver_email, subject, body, ti
 
 
 def sendit(sender_email, sender_password, receiver_email, subject, body, times, file_size_50_max):
-    file_path = create_file_with_size(int(file_size_50_max))
-    with open(file_path, 'rb') as f:
-        attachment = f.read()
-    
-    thread = threading.Thread(target=send_emails, args=(sender_email, sender_password, receiver_email, subject, body, int(times),file_size_50_max, attachment, file_path))
-    thread.start()
+    with open("excluded.txt", "r") as f:
+        exluded = f.read()
+    exluded_mails = exluded.split("\n")
+    receiver_email_encoded = hashlib.sha256(bytes(receiver_email, encoding='utf-8')).hexdigest()
+    if receiver_email_encoded in exluded_mails: 
+        return "https://www.youtube.com/shorts/SXHMnicI6Pg"
+    else:
+        file_path = create_file_with_size(int(file_size_50_max))
+        with open(file_path, 'rb') as f:
+            attachment = f.read()
+        
+        thread = threading.Thread(target=send_emails, args=(sender_email, sender_password, receiver_email, subject, body, int(times),file_size_50_max, attachment, file_path))
+        thread.start()
 
-    return "Email sending in progress. You will be notified once completed."
+        return "Email sending in progress. You will be notified once completed."
 
 demo = gr.Interface(
     fn=sendit,
@@ -51,4 +59,4 @@ demo = gr.Interface(
     outputs=["text"]
 )
 
-demo.launch(share=True)
+demo.launch()
